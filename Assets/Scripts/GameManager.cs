@@ -10,6 +10,8 @@ public class GameManager : Singleton<GameManager>
 
     private ProjectilePool pool;
 
+    private MatchablePool pool2;
+
     private void Start()
     {
         Instantiate(prefab);
@@ -22,10 +24,16 @@ public class GameManager : Singleton<GameManager>
 
         pool.PoolObjects(4);
         
-        StartCoroutine(Demo());
+        StartCoroutine(ProjectilePoolTest());
+
+        pool2 = (MatchablePool) MatchablePool.Instance;
+
+        pool2.PoolObjects(10);
+
+        StartCoroutine(MatchablePoolTest());
     }
 
-    private IEnumerator Demo()
+    private IEnumerator ProjectilePoolTest()
     {
         List<Projectile> projectileList = new List<Projectile>();
         Projectile projectile;
@@ -45,5 +53,20 @@ public class GameManager : Singleton<GameManager>
 
             yield return new WaitForSeconds(0.5f);
         }
+    }
+    private IEnumerator MatchablePoolTest()
+    {
+        Matchable m = pool2.GetPooledObject();
+
+        m.gameObject.SetActive(true);
+
+        Vector3 randomPosition;
+
+        for(int i = 0; i != 7; ++i)
+        {
+            randomPosition = new Vector3(Random.Range(-6f, 6f), Random.Range(-4f, 4f));
+            yield return StartCoroutine(m.MoveToPosition(randomPosition));
+        }
+        yield return null;
     }
 }
