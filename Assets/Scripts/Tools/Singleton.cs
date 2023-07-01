@@ -1,5 +1,15 @@
 using UnityEngine;
 
+/*
+* This can be inherited by any Game Object script,
+* will guarantee that there will only be 1 instance allowed in the scene,
+* and provide quick access to that instance through the static getter Instance
+*
+* If you want to use the functionality of Awake(), please use Init() instead
+*
+*
+*/
+
 public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
 {
     private static T instance;

@@ -1,72 +1,56 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : Singleton<GameManager>
 {
-    public Player player;
+    private MatchablePool pool;
+    private MatchableGrid grid;
 
-    public GameObject prefab;
-
-    private ProjectilePool pool;
-
-    private MatchablePool pool2;
+    [SerializeField] private Vector2Int dimensions;
+    [SerializeField] private Text gridOutput;
 
     private void Start()
     {
-        Instantiate(prefab);
+        pool = (MatchablePool) MatchablePool.Instance;
+        grid = (MatchableGrid) MatchableGrid.Instance;
 
-        player = Player.Instance;
+        pool.PoolObjects(10);
 
-        print(player.health);
+        grid.InitializeGrid(dimensions);
 
-        pool = (ProjectilePool) ProjectilePool.Instance;
-
-        pool.PoolObjects(4);
-        
-        StartCoroutine(ProjectilePoolTest());
-
-        pool2 = (MatchablePool) MatchablePool.Instance;
-
-        pool2.PoolObjects(10);
-
-        StartCoroutine(MatchablePoolTest());
+        StartCoroutine(Demo());
     }
-
-    private IEnumerator ProjectilePoolTest()
+    private IEnumerator Demo()
     {
-        List<Projectile> projectileList = new List<Projectile>();
-        Projectile projectile;
+        gridOutput.text = grid.ToString();
+        yield return new WaitForSeconds(2);
 
-        for(int i = 0; i != 7; ++i)
-        {
-            projectile = pool.GetPooledObject();
-            projectileList.Add(projectile);
-            projectile.Randomize();
-            projectile.gameObject.SetActive(true);
+        Matchable m1 = pool.GetPooledObject();
+        m1.gameObject.SetActive(true);
+        m1.gameObject.name = "a";
 
-            yield return new WaitForSeconds(0.5f);
-        }
-        for (int i = 0; i != 4; ++i)
-        {
-            pool.ReturnObjectToPool(projectileList[i]);
+        Matchable m2 = pool.GetPooledObject();
+        m2.gameObject.SetActive(true);
+        m2.gameObject.name = "b";
 
-            yield return new WaitForSeconds(0.5f);
-        }
-    }
-    private IEnumerator MatchablePoolTest()
-    {
-        Matchable m = pool2.GetPooledObject();
+        grid.PutItemAt(m1,0,1);
+        grid.PutItemAt(m2,2,3);
 
-        m.gameObject.SetActive(true);
+        gridOutput.text = grid.ToString();
+        yield return new WaitForSeconds(2);
 
-        Vector3 randomPosition;
+        grid.SwapItemsAt(0,1,2,3);
+        gridOutput.text = grid.ToString();
+        yield return new WaitForSeconds(2);
 
-        for(int i = 0; i != 7; ++i)
-        {
-            randomPosition = new Vector3(Random.Range(-6f, 6f), Random.Range(-4f, 4f));
-            yield return StartCoroutine(m.MoveToPosition(randomPosition));
-        }
-        yield return null;
+        grid.RemoveItemAt(0,1);
+        grid.RemoveItemAt(2,3);
+        gridOutput.text = grid.ToString();
+        yield return new WaitForSeconds(2);
+
+        pool.ReturnObjectToPool(m1);
+        pool.ReturnObjectToPool(m2);
     }
 }

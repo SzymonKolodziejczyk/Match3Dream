@@ -2,6 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/*
+* This class will allow us to instantiate as manyy objects as we will need
+* while the scene is beign set up so that we don't slow down the game by
+* calling Instantiate during gameplay.
+*
+* It is preferred to call PoolObjects first with a specified amount
+*/
+
 public abstract class ObjectPool<T> : Singleton<ObjectPool<T>> where T : MonoBehaviour
 {
     [SerializeField] protected T prefab;

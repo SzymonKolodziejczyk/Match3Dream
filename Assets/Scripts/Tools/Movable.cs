@@ -2,6 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/*
+* This will allow for game object to move smoothly
+* from its current position to a new target position
+* speed is set in the inspector using a coroutine.
+*
+* Speed must be a positive number.
+*
+* You can see if the object is currently moving using Idle
+*
+* There is an Easing function to alter the speed of the animation over time
+*/
 public class Movable : MonoBehaviour
 {
     private Vector3 from,
