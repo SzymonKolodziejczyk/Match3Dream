@@ -19,6 +19,8 @@ public class Cursor : Singleton<Cursor>
                     halfLeft    = Vector3.left  / 2,
                     halfRight   = Vector3.right / 2;
 
+    private MatchableGrid grid;
+
     protected override void Init()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -27,6 +29,12 @@ public class Cursor : Singleton<Cursor>
 
         selected = new Matchable[2];
     }
+
+    private void Start()
+    {
+        grid = (MatchableGrid) MatchableGrid.Instance;
+    }
+
     public void SelectFirst(Matchable toSelect)
     {
         selected[0] = toSelect;
@@ -48,7 +56,8 @@ public class Cursor : Singleton<Cursor>
 
         if(SelectedAreAdjacent())
             print("Swapping matchables at positions: (" + selected[0].position.x + ", " + selected[0].position.y + ") and (" + selected[1].position.x + ", " + selected[1].position.y + ")");
-    
+            StartCoroutine(grid.TrySwap(selected));
+
         SelectFirst(null);
     }
     private bool SelectedAreAdjacent()
