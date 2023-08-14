@@ -25,13 +25,16 @@ public class MatchableGrid : GridSystem<Matchable>
                 newMatchable = pool.GetRandomMatchable();
 
                 // position the matchable on screen
-                //  newMatchable.transform.position = transform.position + new Vector3(x,y);
+                // newMatchable.transform.position = transform.position + new Vector3(x,y);
 
                 onscreenPosition = transform.position + new Vector3(x, y);
                 newMatchable.transform.position = onscreenPosition + offscreenOffset;
 
                 // activate the matchable
                 newMatchable.gameObject.SetActive(true);
+
+                // tell me where it is on the grid
+                newMatchable.position = new Vector2Int(x,y);
 
                 // place the matchable in the grid
                 PutItemAt(newMatchable, x, y);
