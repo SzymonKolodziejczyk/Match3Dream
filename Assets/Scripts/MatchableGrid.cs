@@ -39,12 +39,15 @@ public class MatchableGrid : GridSystem<Matchable>
                 // place the matchable in the grid
                 PutItemAt(newMatchable, x, y);
 
-                int type = newMatchable.Type;
+                int initialType = newMatchable.Type;
 
                 while(!allowMatches & IsPartOfAMatch(newMatchable))
                 {
+                    //Debug.Break(); //Checking how matching works
+                    //yield return null;
+
                     //change the matchable's type until it isn't a match anymore
-                    if(pool.NextType(newMatchable) == type)
+                    if(pool.NextType(newMatchable) == initialType)
                     {
                         Debug.LogWarning("Failed to find a matchable type that didn't match at (" + x + ", " + y + ")");
                         Debug.Break();
@@ -57,13 +60,43 @@ public class MatchableGrid : GridSystem<Matchable>
 
                 yield return new WaitForSeconds(0.1f);
             }
+        yield return null;
     }
-    /*
-    //TODO
-    */
-    private bool IsPartOfAMatch(Matchable matchable)
+    //Check if the matchable beign populated is part of a match or not
+    private bool IsPartOfAMatch(Matchable toMatch)
     {
+        int horizontalMatches   = 0,
+            verticalMatches     = 0;
+
+        //look to the left, now to the right
+        horizontalMatches += CountMatchesInDirection(toMatch, Vector2Int.left);
+        horizontalMatches += CountMatchesInDirection(toMatch, Vector2Int.right);
+
+        if(horizontalMatches > 1)
+            return true;
+
+        //shake your up, now down
+        verticalMatches += CountMatchesInDirection(toMatch, Vector2Int.up);
+        verticalMatches += CountMatchesInDirection(toMatch, Vector2Int.down);
+
+        if(verticalMatches > 1)
+            return true;
+        
         return false;
+    }
+
+    //Check if the number of matches on the grid starts from the matchable to match moving in indicated direction
+    private int CountMatchesInDirection(Matchable toMatch, Vector2Int direction)
+    {
+        int matches = 0;
+        Vector2Int position = toMatch.position + direction;
+
+        while(CheckBounds(position) && !IsEmpty(position) && GetItemAt(position).Type == toMatch.Type)
+        {
+            ++matches;
+            position += direction;
+        }
+        return matches;
     }
 
     public IEnumerator TrySwap(Matchable[] toBeSwapped)
@@ -76,23 +109,76 @@ public class MatchableGrid : GridSystem<Matchable>
         yield return StartCoroutine(Swap(copies));
 
         // check for a valid match
-        if(SwapWasValid())
+        Match[] matches = new Match[2];
+
+        matches[0] = GetMatch(copies[0]);
+        matches[1] = GetMatch(copies[1]);
+
+        if(matches[0] != null)
         {
             //resolve match
+            print(matches[0]);
         }
-        else
+
+        if(matches[1] != null)
         {
-            //  if no match, swap back
-            StartCoroutine(Swap(copies));
+            //resolve match
+            print(matches[1]);
         }
-        /*
-        // TODO
-        */
+        // If no matches, swap them back
+        if(matches[0] == null && matches[1] == null)
+            StartCoroutine(Swap(copies));
     }
-    private bool SwapWasValid()
+
+    private Match GetMatch(Matchable toMatch)
     {
-        return true;
+        Match match = new Match(toMatch);
+
+        Match   horizontalMatch,
+                verticalMatch;
+
+        //Get horizontal matches from left to right
+        horizontalMatch = GetMatchesInDirection(toMatch, Vector2Int.left);
+        horizontalMatch.Merge(GetMatchesInDirection(toMatch, Vector2Int.right));
+
+        if(horizontalMatch.Count > 1)
+            match.Merge(horizontalMatch);
+
+        //Get vertical matches from up to down
+        verticalMatch = GetMatchesInDirection(toMatch, Vector2Int.up);
+        verticalMatch.Merge(GetMatchesInDirection(toMatch, Vector2Int.down));
+
+        if(verticalMatch.Count > 1)
+            match.Merge(verticalMatch);
+
+        if(match.Count == 1)
+            return null;
+
+        return match;
     }
+
+    // Add each matching matchable in the direction to a match and return it
+    private Match GetMatchesInDirection(Matchable toMatch, Vector2Int direction)
+    {
+        Match match = new Match();
+        Vector2Int position = toMatch.position + direction;
+        Matchable next;
+
+        while(CheckBounds(position) && !IsEmpty(position))
+        {
+            next = GetItemAt(position);
+
+            if(next.Type == toMatch.Type && next.Idle)
+            {
+                match.AddMatchable(next);
+                position += direction;
+            }
+            else
+                break;
+        }
+        return match;
+    }
+
     private IEnumerator Swap(Matchable[] toBeSwapped)
     {
         //  swap in the grid data structure

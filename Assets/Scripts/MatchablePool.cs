@@ -24,11 +24,11 @@ public class MatchablePool : ObjectPool<Matchable>
         return randomMatchable;
     }
 
-    public int NextType(Matchable matchable)
+    public int NextType(Matchable toMatch)
     {
-        int nextType = (matchable.Type + 1) % howManyTypes;
+        int nextType = (toMatch.Type + 1) % howManyTypes;
 
-        matchable.SetType(nextType, sprites[nextType], colors[nextType]);
+        toMatch.SetType(nextType, sprites[nextType], colors[nextType]);
 
         return nextType;
     }
