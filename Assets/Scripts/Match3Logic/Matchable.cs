@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class Matchable : Movable
 {
-
+    private MatchablePool pool;
     private Cursor cursor;
     private int type;
 
@@ -26,6 +26,7 @@ public class Matchable : Movable
     {
         cursor = Cursor.Instance;
         spriteRenderer = GetComponent<SpriteRenderer>();
+        pool = (MatchablePool) MatchablePool.Instance;
     }
 
     public void SetType(int type, Sprite sprite, Color color)
@@ -33,6 +34,21 @@ public class Matchable : Movable
         this.type = type;
         spriteRenderer.sprite = sprite;
         spriteRenderer.color = color;
+    }
+
+    public IEnumerator Resolve(Transform collectionPoint)
+    {
+        // draw above others in the grid
+        spriteRenderer.sortingOrder = 2;
+
+        // move off the grid to a collection point
+        yield return StartCoroutine(MoveToPosition(collectionPoint.position));
+
+        // reset
+        spriteRenderer.sortingOrder = 1;
+
+        // return back to the pool
+        pool.ReturnObjectToPool(this);
     }
 
     private void OnMouseDown()

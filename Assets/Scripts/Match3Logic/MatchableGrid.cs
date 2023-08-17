@@ -4,15 +4,21 @@ using UnityEngine;
 
 public class MatchableGrid : GridSystem<Matchable>
 {
-
+    //the pool of Matchables with which to populate the grid
     private MatchablePool pool;
+    private ScoreManager score;
+    
+    // A distance offscreen where the matchables will be spawned
     [SerializeField] private Vector3 offscreenOffset;
 
+    // Get a reference to the pool on start
     private void Start()
     {
         pool = (MatchablePool) MatchablePool.Instance;
+        score = ScoreManager.Instance;
     }
 
+    //Populate the grid with matchables from the pool
     public IEnumerator PopulateGrid(bool allowMatches = false)
     {
         Matchable newMatchable;
@@ -115,16 +121,15 @@ public class MatchableGrid : GridSystem<Matchable>
         matches[1] = GetMatch(copies[1]);
 
         if(matches[0] != null)
-        {
             //resolve match
-            print(matches[0]);
-        }
+            //print(matches[0]);
+            StartCoroutine(score.ResolveMatch(matches[0]));
 
         if(matches[1] != null)
-        {
             //resolve match
-            print(matches[1]);
-        }
+            //print(matches[1]);
+            StartCoroutine(score.ResolveMatch(matches[1]));
+
         // If no matches, swap them back
         if(matches[0] == null && matches[1] == null)
             StartCoroutine(Swap(copies));
