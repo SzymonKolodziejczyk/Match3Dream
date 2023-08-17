@@ -26,47 +26,50 @@ public class MatchableGrid : GridSystem<Matchable>
 
         for(int y = 0; y != Dimensions.y; ++y)
             for(int x = 0; x != Dimensions.x; ++x)
-            {
-                // get a matchable from the pool
-                newMatchable = pool.GetRandomMatchable();
+                if(IsEmpty(x, y))
 
-                // position the matchable on screen
-                // newMatchable.transform.position = transform.position + new Vector3(x,y);
-
-                onscreenPosition = transform.position + new Vector3(x, y);
-                newMatchable.transform.position = onscreenPosition + offscreenOffset;
-
-                // activate the matchable
-                newMatchable.gameObject.SetActive(true);
-
-                // tell me where it is on the grid
-                newMatchable.position = new Vector2Int(x,y);
-
-                // place the matchable in the grid
-                PutItemAt(newMatchable, x, y);
-
-                int initialType = newMatchable.Type;
-
-                while(!allowMatches & IsPartOfAMatch(newMatchable))
                 {
-                    //Debug.Break(); //Checking how matching works
-                    //yield return null;
+                    // get a matchable from the pool
+                    newMatchable = pool.GetRandomMatchable();
 
-                    //change the matchable's type until it isn't a match anymore
-                    if(pool.NextType(newMatchable) == initialType)
+                    // position the matchable on screen
+                    // newMatchable.transform.position = transform.position + new Vector3(x,y);
+
+                    onscreenPosition = transform.position + new Vector3(x, y);
+                    newMatchable.transform.position = onscreenPosition + offscreenOffset;
+
+                    // activate the matchable
+                    newMatchable.gameObject.SetActive(true);
+
+                    // tell me where it is on the grid
+                    newMatchable.position = new Vector2Int(x,y);
+
+                    // place the matchable in the grid
+                    PutItemAt(newMatchable, x, y);
+
+                    int initialType = newMatchable.Type;
+
+                    while(!allowMatches & IsPartOfAMatch(newMatchable))
                     {
-                        Debug.LogWarning("Failed to find a matchable type that didn't match at (" + x + ", " + y + ")");
-                        Debug.Break();
-                        break;
+                        //Debug.Break(); //Checking how matching works
+                        //yield return null;
+
+                        //change the matchable's type until it isn't a match anymore
+                        if(pool.NextType(newMatchable) == initialType)
+                        {
+                            Debug.LogWarning("Failed to find a matchable type that didn't match at (" + x + ", " + y + ")");
+                            Debug.Break();
+                            break;
+                        }
                     }
+
+                    //MoveMatchable to the appropriate screen position
+                    StartCoroutine(newMatchable.MoveToPosition(onscreenPosition));
+
+                    yield return new WaitForSeconds(0.1f);
                 }
-
-                //MoveMatchable to the appropriate screen position
-                StartCoroutine(newMatchable.MoveToPosition(onscreenPosition));
-
-                yield return new WaitForSeconds(0.1f);
-            }
         yield return null;
+        
     }
     //Check if the matchable beign populated is part of a match or not
     private bool IsPartOfAMatch(Matchable toMatch)
@@ -133,6 +136,12 @@ public class MatchableGrid : GridSystem<Matchable>
         // If no matches, swap them back
         if(matches[0] == null && matches[1] == null)
             StartCoroutine(Swap(copies));
+
+        else 
+        {
+            CollapseGrid();
+            StartCoroutine(PopulateGrid(true));
+        }
     }
 
     private Match GetMatch(Matchable toMatch)
@@ -202,5 +211,33 @@ public class MatchableGrid : GridSystem<Matchable>
         //  move them to new position on screen
         StartCoroutine(toBeSwapped[0].MoveToPosition(worldPosition[1]));
         yield return StartCoroutine(toBeSwapped[1].MoveToPosition(worldPosition[0]));
+    }
+    private void CollapseGrid()
+    {
+
+        //  Go through each column left to right, search from bottom up to find an empty space, then look above the empty space, 
+        //  and up through the rest of the column, until you find a non empty space. Move the matchable at the non empty space 
+        //  into the empty space, then continue looking for empty spaces.
+        for(int x = 0; x != Dimensions.x; ++x)
+            for(int yEmpty = 0; yEmpty != Dimensions.y - 1; ++yEmpty)
+                if(IsEmpty(x, yEmpty))
+                    for(int yNotEmpty = yEmpty + 1; yNotEmpty != Dimensions.y; ++yNotEmpty)
+                        if(!IsEmpty(x, yNotEmpty) && GetItemAt(x, yNotEmpty).Idle)
+                            {
+                                // Move the matchable from NotEmpty to Empty
+                                MoveMatchableToPosition(GetItemAt(x, yNotEmpty), x, yEmpty);
+                                break;
+                            }
+    }
+    private void MoveMatchableToPosition(Matchable toMove, int x, int y)
+    {
+        //  move the matchable to its new position in the grid
+        MoveItemTo(toMove.position, new Vector2Int(x, y));
+
+        //  update the matchable's internal grid position
+        toMove.position = new Vector2Int(x, y);
+
+        //  start animation to move it on screen
+        StartCoroutine(toMove.MoveToPosition(transform.position + new Vector3(x, y)));
     }
 }

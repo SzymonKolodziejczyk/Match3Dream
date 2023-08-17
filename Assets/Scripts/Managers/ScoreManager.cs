@@ -1,17 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
-[RequireComponent(typeof(Text))]
 public class ScoreManager : Singleton<ScoreManager>
 {
     private MatchableGrid grid;
 
     [SerializeField]
     private Transform collectionPoint;
+    private TMPro.TextMeshProUGUI scoreText;
 
-    private Text scoreText;
     private int score;
     
     public int Score
@@ -24,7 +23,7 @@ public class ScoreManager : Singleton<ScoreManager>
 
     protected override void Init()
     {
-        scoreText = GetComponent<Text>();
+        scoreText = GetComponent<TMPro.TextMeshProUGUI>();
     }
 
     private void Start()

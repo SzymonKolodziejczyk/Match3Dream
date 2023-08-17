@@ -30,6 +30,7 @@ public abstract class GridSystem<T> : Singleton<GridSystem<T>>
         }
     }
 
+    //  Initialize the data array
     public void InitializeGrid(Vector2Int dimensions)
     {
         if(dimensions.x < 1 || dimensions.y < 1)
@@ -42,11 +43,13 @@ public abstract class GridSystem<T> : Singleton<GridSystem<T>>
         isReady = true;
     }
 
+    //  Clear the entire grid
     public void Clear()
     {
         data = new T[dimensions.x, dimensions.y];
     }
 
+    //  Bounds check
     public bool CheckBounds(int x, int y)
     {
         if(!isReady)
@@ -60,6 +63,7 @@ public abstract class GridSystem<T> : Singleton<GridSystem<T>>
         return CheckBounds(position.x, position.y);
     }
 
+    //  Check if a grid position is empty
     public bool IsEmpty(int x, int y)
     {
         if(!CheckBounds(x,y))
@@ -73,6 +77,7 @@ public abstract class GridSystem<T> : Singleton<GridSystem<T>>
         return IsEmpty(position.x, position.y);
     }
 
+    //  put an item on the grid
     public bool PutItemAt(T item, int x, int y, bool allowOverwrite = false)
     {
         if(!CheckBounds(x,y))
@@ -85,6 +90,7 @@ public abstract class GridSystem<T> : Singleton<GridSystem<T>>
         return true;
     }
 
+    //  get an item from the grid
     public bool PutItemAt(T item, Vector2Int position, bool allowOverwrite = false)
     {
         return PutItemAt(item, position.x, position.y, allowOverwrite);
@@ -117,6 +123,27 @@ public abstract class GridSystem<T> : Singleton<GridSystem<T>>
         return RemoveItemAt(position.x, position.y);
     }
 
+    //  move an item on the grid
+    public bool MoveItemTo(int x1, int y1, int x2, int y2, bool allowOverwrite = false)
+    {
+        if(!CheckBounds(x1,y1))
+            Debug.LogError("(" + x1 + ", " + y1 + ") are not on the grid!");
+
+        if(!CheckBounds(x2,y2))
+            Debug.LogError("(" + x2 + ", " + y2 + ") are not on the grid!");
+
+        if(!allowOverwrite && !IsEmpty(x2,y2))
+            return false;
+
+        data[x2,y2] = RemoveItemAt(x1, y1);
+        return true;
+    }
+    public bool MoveItemTo(Vector2Int position1, Vector2Int position2, bool allowOverwrite = false)
+    {
+        return MoveItemTo(position1.x, position1.y, position2.x, position2.y, allowOverwrite);
+    }
+
+    //  swap 2 items on the grid
     public void SwapItemsAt(int x1, int y1, int x2, int y2)
     {
         if(!CheckBounds(x1,y1))
